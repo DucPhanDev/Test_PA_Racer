@@ -4,53 +4,76 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float acceleration = 20f;
-    public float maxSpeed = 15f;
-    public float turnSpeed = 60f;
-    public float maxTurnAngle = 30f;
+    [Header("Wheel Colliders")]
+    [SerializeField] private WheelCollider wheelColliderFL;
+    [SerializeField] private WheelCollider wheelColliderFR;
+    [SerializeField] private WheelCollider wheelColliderRL;
+    [SerializeField] private WheelCollider wheelColliderRR;
 
-    private float currentTurnInput = 0f;
-    private float currentTurnAngle = 0f;
+    [Header("Wheel Meshes")]
+    [SerializeField] private Transform wheelFL;
+    [SerializeField] private Transform wheelFR;
+    [SerializeField] private Transform wheelRL;
+    [SerializeField] private Transform wheelRR;
 
-    private Rigidbody rb;
-
-    void Start()
+    [Header("Car Settings")]
+    public float motorTorque = 1500f;
+    public float maxSteerAngle = 30f;
+    public float brakeForce = 3000f;
+    private void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-        rb.useGravity = false;
+        UpdateWheelsVisual();
     }
-
-    void Update()
+    void HandleMotor()
     {
-        HandleInput();
-    }
+        float vertical = Input.GetAxis("Vertical");
 
+        // Apply motor torque to rear wheels (RWD)
+        wheelColliderRL.motorTorque = vertical * motorTorque;
+        wheelColliderRR.motorTorque = vertical * motorTorque;
+
+        // Brake (when reversing)
+        bool isBraking = vertical < 0f;
+        float appliedBrake = isBraking ? brakeForce : 0f;
+
+        wheelColliderFL.brakeTorque = appliedBrake;
+        wheelColliderFR.brakeTorque = appliedBrake;
+        wheelColliderRL.brakeTorque = appliedBrake;
+        wheelColliderRR.brakeTorque = appliedBrake;
+    }
     void FixedUpdate()
     {
-        Turn();
-        Move();
+        HandleMotor();
+        HandleSteering();
+        UpdateWheelsVisual();
+    }
+    void HandleSteering()
+    {
+        float horizontal = Input.GetAxis("Horizontal");
+
+        float steerAngle = horizontal * maxSteerAngle;
+
+        // Apply steering to front wheels
+        wheelColliderFL.steerAngle = steerAngle;
+        wheelColliderFR.steerAngle = steerAngle;
     }
 
-    void HandleInput()
+    void UpdateWheelsVisual()
     {
-        currentTurnInput = Input.GetAxisRaw("Horizontal");
+        UpdateWheelPose(wheelColliderFL, wheelFL);
+        UpdateWheelPose(wheelColliderFR, wheelFR);
+        UpdateWheelPose(wheelColliderRL, wheelRL);
+        UpdateWheelPose(wheelColliderRR, wheelRR);
     }
 
-    void Move()
+    void UpdateWheelPose(WheelCollider collider, Transform wheelTransform)
     {
 
-        Vector3 desiredVelocity = transform.forward * maxSpeed;
-        rb.velocity = Vector3.Lerp(rb.velocity, desiredVelocity, acceleration * Time.fixedDeltaTime);
-    }
+        Vector3 pos;
+        Quaternion rot;
+        collider.GetWorldPose(out pos, out rot);
 
-    void Turn()
-    {
-   
-        currentTurnAngle += currentTurnInput * turnSpeed * Time.fixedDeltaTime;
-        currentTurnAngle = Mathf.Clamp(currentTurnAngle, -maxTurnAngle, maxTurnAngle);
-
-        Quaternion targetRotation = Quaternion.Euler(0f, currentTurnAngle, 0f);
-        rb.MoveRotation(targetRotation);
+        wheelTransform.position = pos;
+        wheelTransform.rotation = rot;
     }
 }
