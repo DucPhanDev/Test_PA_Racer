@@ -1,0 +1,143 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d41887b1546f5c44ab54e7e65aad3bc, type: 3}
+  m_Name: atlas_texture
+  m_EditorClassIdentifier: 
+  version: 3252
+  resultType: 0
+  materialsAndUVRects:
+  - material: {fileID: 2100000, guid: 7f93a110cc286b2448248ce68fb0d75d, type: 2}
+    atlasRect:
+      serializedVersion: 2
+      x: 0.00048828125
+      y: 0.00048828125
+      width: 0.49902344
+      height: 0.5
+    srcObjName: road_001
+    textureArraySliceIdx: -1
+    allPropsUseSameTiling: 1
+    allPropsUseSameTiling_sourceMaterialTiling:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    allPropsUseSameTiling_samplingEncapsulatinRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    propsUseDifferntTiling_srcUVsamplingRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    tilingTreatment: 0
+  - material: {fileID: 2100000, guid: e1da27c2ee8bc7a42a0d07b83a2c0038, type: 2}
+    atlasRect:
+      serializedVersion: 2
+      x: 0.00048828125
+      y: 0.00048828125
+      width: 0.49902344
+      height: 0.5
+    srcObjName: road_001
+    textureArraySliceIdx: -1
+    allPropsUseSameTiling: 1
+    allPropsUseSameTiling_sourceMaterialTiling:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    allPropsUseSameTiling_samplingEncapsulatinRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    propsUseDifferntTiling_srcUVsamplingRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    tilingTreatment: 0
+  - material: {fileID: 2100000, guid: ca7ba4b1fc33f8f48ad0ab55394556b1, type: 2}
+    atlasRect:
+      serializedVersion: 2
+      x: 0.00048828125
+      y: 0.00048828125
+      width: 0.49902344
+      height: 0.5
+    srcObjName: road_001
+    textureArraySliceIdx: -1
+    allPropsUseSameTiling: 1
+    allPropsUseSameTiling_sourceMaterialTiling:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    allPropsUseSameTiling_samplingEncapsulatinRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    propsUseDifferntTiling_srcUVsamplingRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    tilingTreatment: 0
+  - material: {fileID: 2100000, guid: b953325a729791343b9fda58b967a70a, type: 2}
+    atlasRect:
+      serializedVersion: 2
+      x: 0.5004883
+      y: 0.00048828125
+      width: 0.49902344
+      height: 0.5
+    srcObjName: Basketball
+    textureArraySliceIdx: -1
+    allPropsUseSameTiling: 1
+    allPropsUseSameTiling_sourceMaterialTiling:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    allPropsUseSameTiling_samplingEncapsulatinRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    propsUseDifferntTiling_srcUVsamplingRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    tilingTreatment: 0
+  resultMaterials:
+  - combinedMaterial: {fileID: 2100000, guid: ebd16802871cdaa438898de451decf41, type: 2}
+    considerMeshUVs: 0
+    sourceMaterials:
+    - {fileID: 2100000, guid: b953325a729791343b9fda58b967a70a, type: 2}
+    - {fileID: 2100000, guid: 7f93a110cc286b2448248ce68fb0d75d, type: 2}
+    - {fileID: 2100000, guid: e1da27c2ee8bc7a42a0d07b83a2c0038, type: 2}
+    - {fileID: 2100000, guid: ca7ba4b1fc33f8f48ad0ab55394556b1, type: 2}
+  resultMaterialsTexArray: []
+  doMultiMaterial: 1

@@ -1,79 +1,133 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.EventSystems;
+using Luna;
 public class PlayerController : MonoBehaviour
 {
-    [Header("Wheel Colliders")]
-    [SerializeField] private WheelCollider wheelColliderFL;
-    [SerializeField] private WheelCollider wheelColliderFR;
-    [SerializeField] private WheelCollider wheelColliderRL;
-    [SerializeField] private WheelCollider wheelColliderRR;
+    [Header("Movement Settings")]
+    public float constantForwardForce = 30f;
+    [LunaPlaygroundField("Player Max Speed", 0, "Player Controls")]
+    public float maxSpeed = 50f;
+    [LunaPlaygroundField("Player Steer Strength", 1, "Player Controls")]
+    public float steerStrength = 80f;
+    public float brakeStrength = 30f;
+    [Range(0f, 1f)]
+    public float baseGrip = 0.98f;
+    [Range(0f, 1f)]
+    public float driftGripMultiplier = 0.7f;
+    public float driftTorqueMultiplier = 1f;
 
-    [Header("Wheel Meshes")]
-    [SerializeField] private Transform wheelFL;
-    [SerializeField] private Transform wheelFR;
-    [SerializeField] private Transform wheelRL;
-    [SerializeField] private Transform wheelRR;
+    [Header("Rotation Limits")]
+    [Range(0f, 140f)]
+    public float maxRotationAngle = 45f;
 
-    [Header("Car Settings")]
-    public float motorTorque = 1500f;
-    public float maxSteerAngle = 30f;
-    public float brakeForce = 3000f;
-    private void Start()
+    [Header("Rotation Limits")]
+    private Rigidbody rb;
+    private float steerAmount;
+    private bool isBraking = false;
+    private float currentGrip;
+    private float initialYaw;
+
+    [Header("Joystick")]
+    [SerializeField] private Joystick joystick;
+
+    [Header("Drift Kick Out Settings")]
+    public float kickOutForce = 3000f;
+    public float driftSpeedThreshold = 5f;
+    public float driftSteerThreshold = 0.5f;
+    void Awake()
     {
-        UpdateWheelsVisual();
+        rb = GetComponent<Rigidbody>();
+        currentGrip = baseGrip;
     }
-    void HandleMotor()
+
+    void Start()
     {
-        float vertical = Input.GetAxis("Vertical");
-
-        // Apply motor torque to rear wheels (RWD)
-        wheelColliderRL.motorTorque = vertical * motorTorque;
-        wheelColliderRR.motorTorque = vertical * motorTorque;
-
-        // Brake (when reversing)
-        bool isBraking = vertical < 0f;
-        float appliedBrake = isBraking ? brakeForce : 0f;
-
-        wheelColliderFL.brakeTorque = appliedBrake;
-        wheelColliderFR.brakeTorque = appliedBrake;
-        wheelColliderRL.brakeTorque = appliedBrake;
-        wheelColliderRR.brakeTorque = appliedBrake;
+        initialYaw = transform.eulerAngles.y;
     }
+
+    void Update()
+    {
+        //if (!SystemManager.Instance.GameStarted || SystemManager.Instance.GameEnded)
+        //    return;
+
+        //steerAmount = -joystick.Horizontal;
+        //ApplyForwardForce();
+        //ApplySteering();
+        //LimitRotation();
+        //HandleDrift();
+    }
+
     void FixedUpdate()
     {
-        HandleMotor();
-        HandleSteering();
-        UpdateWheelsVisual();
-    }
-    void HandleSteering()
-    {
-        float horizontal = Input.GetAxis("Horizontal");
+        if (!SystemManager.Instance.GameStarted || SystemManager.Instance.GameEnded)
+            return;
 
-        float steerAngle = horizontal * maxSteerAngle;
-
-        // Apply steering to front wheels
-        wheelColliderFL.steerAngle = steerAngle;
-        wheelColliderFR.steerAngle = steerAngle;
+        steerAmount = -joystick.Horizontal;
+        ApplyForwardForce();
+        ApplySteering();
+        LimitRotation();
+        HandleDrift();
     }
 
-    void UpdateWheelsVisual()
+    void ApplyForwardForce()
     {
-        UpdateWheelPose(wheelColliderFL, wheelFL);
-        UpdateWheelPose(wheelColliderFR, wheelFR);
-        UpdateWheelPose(wheelColliderRL, wheelRL);
-        UpdateWheelPose(wheelColliderRR, wheelRR);
+        Vector3 forwardForce = transform.forward * constantForwardForce * Time.fixedDeltaTime;
+        rb.AddForce(forwardForce, ForceMode.Force);
+
+        if (rb.velocity.magnitude > maxSpeed)
+        {
+            rb.velocity = rb.velocity.normalized * maxSpeed;
+        }
     }
 
-    void UpdateWheelPose(WheelCollider collider, Transform wheelTransform)
+    void ApplySteering()
     {
+        float torque = steerAmount * steerStrength * Time.fixedDeltaTime;
+        rb.AddTorque(transform.up * torque, ForceMode.Force);
+    }
 
-        Vector3 pos;
-        Quaternion rot;
-        collider.GetWorldPose(out pos, out rot);
+    void HandleDrift()
+    {
+        Vector3 rightVelocity = Vector3.Project(rb.velocity, transform.right);
+        currentGrip = baseGrip;
 
-        wheelTransform.position = pos;
-        wheelTransform.rotation = rot;
+        bool shouldDrift = Mathf.Abs(steerAmount) > driftSteerThreshold && rb.velocity.magnitude > driftSpeedThreshold;
+
+        if (shouldDrift)
+        {
+
+            currentGrip *= driftGripMultiplier;
+
+
+            rb.velocity -= rightVelocity * (1f - currentGrip);
+
+
+            float driftTorque = steerAmount * steerStrength * driftTorqueMultiplier * Time.fixedDeltaTime;
+            rb.AddTorque(transform.up * driftTorque, ForceMode.Force);
+
+
+            Vector3 kickDirection = transform.right * steerAmount;
+            rb.AddForce(kickDirection * kickOutForce * Time.fixedDeltaTime, ForceMode.Force);
+        }
+
+
+        rb.velocity -= rightVelocity * (1f - currentGrip);
+        rb.angularVelocity *= currentGrip;
+    }
+
+    void LimitRotation()
+    {
+        float currentYaw = transform.eulerAngles.y;
+        float deltaYaw = Mathf.DeltaAngle(initialYaw, currentYaw);
+
+        if (Mathf.Abs(deltaYaw) > maxRotationAngle)
+        {
+            float clampedYaw = initialYaw + Mathf.Clamp(deltaYaw, -maxRotationAngle, maxRotationAngle);
+            Vector3 clampedRotation = new Vector3(transform.eulerAngles.x, clampedYaw, transform.eulerAngles.z);
+            rb.MoveRotation(Quaternion.Euler(clampedRotation));
+            rb.angularVelocity = Vector3.zero;
+        }
     }
 }

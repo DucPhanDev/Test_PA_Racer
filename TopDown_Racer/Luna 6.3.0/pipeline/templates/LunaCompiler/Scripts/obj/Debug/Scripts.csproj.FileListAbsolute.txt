@@ -9,7 +9,6 @@ F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templa
 F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templates\LunaCompiler\Scripts\bin\Debug\Retyped.dom.dll
 F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templates\LunaCompiler\Scripts\bin\Debug\Retyped.es5.dll
 F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templates\LunaCompiler\Scripts\bin\Debug\Retyped.scripthost.dll
-F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templates\LunaCompiler\Scripts\bin\Debug\TextMeshPro.dll
 F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templates\LunaCompiler\Scripts\bin\Debug\UnityEngine.dll
 F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templates\LunaCompiler\Scripts\bin\Debug\UnityEngine.UI.dll
 F:\Projects\TopDown_Racer\Test_PA_Racer\TopDown_Racer\Luna 6.3.0\pipeline\templates\LunaCompiler\Scripts\bin\Debug\UnityEngine.UniversalRenderPipeline.dll

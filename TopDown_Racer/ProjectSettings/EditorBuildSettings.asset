@@ -8,4 +8,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Joystick Pack/Examples/Example Scene.unity
+    guid: 414bddd31c5ea4f4c9f5d1452e5bbb41
+  - enabled: 1
+    path: Assets/Scenes/Test_Joystick_Scene.unity
+    guid: 18de7d5960bd4b0428ec1c18d26c3241
   m_configObjects: {}
