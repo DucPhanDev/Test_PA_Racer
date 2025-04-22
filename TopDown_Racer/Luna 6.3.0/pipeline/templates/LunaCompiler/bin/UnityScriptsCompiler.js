@@ -1,5 +1,5 @@
 /**
- * @version 1.0.9243.37814
+ * @version 1.0.9244.20
  * @copyright anton
  * @compiler Bridge.NET 17.9.42-luna
  */
@@ -4837,10 +4837,20 @@ Bridge.assembly("UnityScriptsCompiler", function ($asm, globals) {
             joystick: null,
             kickOutForce: 0,
             driftSpeedThreshold: 0,
-            driftSteerThreshold: 0
+            driftSteerThreshold: 0,
+            stuckRayLength: 0,
+            unstuckMoveDistance: 0,
+            raySpacing: 0,
+            obstacleMask: null,
+            stuckRayCheckInterval: 0,
+            lastRayCheckTime: 0,
+            stuckDuration: 0,
+            maxStuckTime: 0,
+            isBlocked: false
         },
         ctors: {
             init: function () {
+                this.obstacleMask = new UnityEngine.LayerMask();
                 this.constantForwardForce = 30.0;
                 this.maxSpeed = 50.0;
                 this.steerStrength = 80.0;
@@ -4853,6 +4863,13 @@ Bridge.assembly("UnityScriptsCompiler", function ($asm, globals) {
                 this.kickOutForce = 3000.0;
                 this.driftSpeedThreshold = 5.0;
                 this.driftSteerThreshold = 0.5;
+                this.stuckRayLength = 2.0;
+                this.unstuckMoveDistance = 5.0;
+                this.raySpacing = 1.0;
+                this.stuckRayCheckInterval = 0.5;
+                this.lastRayCheckTime = 0.0;
+                this.stuckDuration = 0.0;
+                this.maxStuckTime = 3.0;
             }
         },
         methods: {
@@ -4879,6 +4896,7 @@ Bridge.assembly("UnityScriptsCompiler", function ($asm, globals) {
                 //ApplySteering();
                 //LimitRotation();
                 //HandleDrift();
+                //CheckStuckWithRaycast();
             },
             /*PlayerController.Update end.*/
 
@@ -4893,11 +4911,51 @@ Bridge.assembly("UnityScriptsCompiler", function ($asm, globals) {
                 this.ApplySteering();
                 this.LimitRotation();
                 this.HandleDrift();
+                this.CheckStuckWithRaycast();
             },
             /*PlayerController.FixedUpdate end.*/
 
+            /*PlayerController.CheckStuckWithRaycast start.*/
+            CheckStuckWithRaycast: function () {
+
+                if (UnityEngine.Time.time - this.lastRayCheckTime < this.stuckRayCheckInterval) {
+                    return;
+                }
+                this.lastRayCheckTime = UnityEngine.Time.time;
+
+                var origin = this.transform.position.$clone().add( pc.Vec3.UP.clone().clone().scale( 0.5 ) );
+                var forwardDir = this.transform.forward.$clone();
+                var hit = { v : new UnityEngine.RaycastHit() };
+
+                this.isBlocked = UnityEngine.Physics.Raycast$3(origin, forwardDir, hit, this.stuckRayLength, UnityEngine.LayerMask.op_Implicit(this.obstacleMask.$clone()));
+                UnityEngine.Debug.DrawRay$2(origin, forwardDir.$clone().clone().scale( this.stuckRayLength ), this.isBlocked ? new pc.Color( 1, 0, 0, 1 ) : new pc.Color( 0, 1, 0, 1 ), this.stuckRayCheckInterval);
+
+                var isMoving = this.rb.velocity.length() > 0.5;
+
+                if (this.isBlocked || !isMoving) {
+                    this.stuckDuration += this.stuckRayCheckInterval;
+
+                    if (this.stuckDuration >= this.maxStuckTime) {
+                        var unstuckPosition = this.transform.position.$clone().sub( this.transform.forward.$clone().clone().scale( this.unstuckMoveDistance ) );
+                        unstuckPosition.y = this.transform.position.y;
+                        this.rb.MovePosition(unstuckPosition);
+
+                        this.rb.velocity = pc.Vec3.ZERO.clone();
+                        this.rb.angularVelocity = pc.Vec3.ZERO.clone();
+
+                        this.stuckDuration = 0.0;
+                    }
+                } else {
+                    this.stuckDuration = 0.0;
+                }
+            },
+            /*PlayerController.CheckStuckWithRaycast end.*/
+
             /*PlayerController.ApplyForwardForce start.*/
             ApplyForwardForce: function () {
+                if (this.isBlocked) {
+                    return;
+                }
                 var forwardForce = this.transform.forward.$clone().clone().scale( this.constantForwardForce ).clone().scale( UnityEngine.Time.fixedDeltaTime );
                 this.rb.AddForce$1(forwardForce, UnityEngine.ForceMode.Force);
 
@@ -8115,7 +8173,7 @@ Bridge.assembly("UnityScriptsCompiler", function ($asm, globals) {
     /*FinishLine_Checker end.*/
 
     /*PlayerController start.*/
-    $m("PlayerController", function () { return {"att":1048577,"a":2,"m":[{"a":2,"isSynthetic":true,"n":".ctor","t":1,"sn":"ctor"},{"a":1,"n":"ApplyForwardForce","t":8,"sn":"ApplyForwardForce","rt":$n[0].Void},{"a":1,"n":"ApplySteering","t":8,"sn":"ApplySteering","rt":$n[0].Void},{"a":1,"n":"Awake","t":8,"sn":"Awake","rt":$n[0].Void},{"a":1,"n":"FixedUpdate","t":8,"sn":"FixedUpdate","rt":$n[0].Void},{"a":1,"n":"HandleDrift","t":8,"sn":"HandleDrift","rt":$n[0].Void},{"a":1,"n":"LimitRotation","t":8,"sn":"LimitRotation","rt":$n[0].Void},{"a":1,"n":"Start","t":8,"sn":"Start","rt":$n[0].Void},{"a":1,"n":"Update","t":8,"sn":"Update","rt":$n[0].Void},{"at":[new UnityEngine.RangeAttribute(0.0, 1.0)],"a":2,"n":"baseGrip","t":4,"rt":$n[0].Single,"sn":"baseGrip","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"brakeStrength","t":4,"rt":$n[0].Single,"sn":"brakeStrength","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.HeaderAttribute("Movement Settings")],"a":2,"n":"constantForwardForce","t":4,"rt":$n[0].Single,"sn":"constantForwardForce","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"currentGrip","t":4,"rt":$n[0].Single,"sn":"currentGrip","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.RangeAttribute(0.0, 1.0)],"a":2,"n":"driftGripMultiplier","t":4,"rt":$n[0].Single,"sn":"driftGripMultiplier","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"driftSpeedThreshold","t":4,"rt":$n[0].Single,"sn":"driftSpeedThreshold","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"driftSteerThreshold","t":4,"rt":$n[0].Single,"sn":"driftSteerThreshold","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"driftTorqueMultiplier","t":4,"rt":$n[0].Single,"sn":"driftTorqueMultiplier","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"initialYaw","t":4,"rt":$n[0].Single,"sn":"initialYaw","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"isBraking","t":4,"rt":$n[0].Boolean,"sn":"isBraking","box":function ($v) { return Bridge.box($v, System.Boolean, System.Boolean.toString);}},{"at":[new UnityEngine.HeaderAttribute("Joystick"),new UnityEngine.SerializeFieldAttribute()],"a":1,"n":"joystick","t":4,"rt":Joystick,"sn":"joystick"},{"at":[new UnityEngine.HeaderAttribute("Drift Kick Out Settings")],"a":2,"n":"kickOutForce","t":4,"rt":$n[0].Single,"sn":"kickOutForce","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.HeaderAttribute("Rotation Limits"),new UnityEngine.RangeAttribute(0.0, 140.0)],"a":2,"n":"maxRotationAngle","t":4,"rt":$n[0].Single,"sn":"maxRotationAngle","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.LunaPlaygroundFieldAttribute("Player Max Speed", 0, "Player Controls", false, null)],"a":2,"n":"maxSpeed","t":4,"rt":$n[0].Single,"sn":"maxSpeed","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.HeaderAttribute("Rotation Limits")],"a":1,"n":"rb","t":4,"rt":$n[1].Rigidbody,"sn":"rb"},{"a":1,"n":"steerAmount","t":4,"rt":$n[0].Single,"sn":"steerAmount","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.LunaPlaygroundFieldAttribute("Player Steer Strength", 1, "Player Controls", false, null)],"a":2,"n":"steerStrength","t":4,"rt":$n[0].Single,"sn":"steerStrength","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}}]}; }, $n);
+    $m("PlayerController", function () { return {"att":1048577,"a":2,"m":[{"a":2,"isSynthetic":true,"n":".ctor","t":1,"sn":"ctor"},{"a":1,"n":"ApplyForwardForce","t":8,"sn":"ApplyForwardForce","rt":$n[0].Void},{"a":1,"n":"ApplySteering","t":8,"sn":"ApplySteering","rt":$n[0].Void},{"a":1,"n":"Awake","t":8,"sn":"Awake","rt":$n[0].Void},{"a":1,"n":"CheckStuckWithRaycast","t":8,"sn":"CheckStuckWithRaycast","rt":$n[0].Void},{"a":1,"n":"FixedUpdate","t":8,"sn":"FixedUpdate","rt":$n[0].Void},{"a":1,"n":"HandleDrift","t":8,"sn":"HandleDrift","rt":$n[0].Void},{"a":1,"n":"LimitRotation","t":8,"sn":"LimitRotation","rt":$n[0].Void},{"a":1,"n":"Start","t":8,"sn":"Start","rt":$n[0].Void},{"a":1,"n":"Update","t":8,"sn":"Update","rt":$n[0].Void},{"at":[new UnityEngine.RangeAttribute(0.0, 1.0)],"a":2,"n":"baseGrip","t":4,"rt":$n[0].Single,"sn":"baseGrip","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"brakeStrength","t":4,"rt":$n[0].Single,"sn":"brakeStrength","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.HeaderAttribute("Movement Settings"),new UnityEngine.LunaPlaygroundFieldAttribute("Player Acceleration", 0, "Player Controls", false, null)],"a":2,"n":"constantForwardForce","t":4,"rt":$n[0].Single,"sn":"constantForwardForce","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"currentGrip","t":4,"rt":$n[0].Single,"sn":"currentGrip","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.RangeAttribute(0.0, 1.0)],"a":2,"n":"driftGripMultiplier","t":4,"rt":$n[0].Single,"sn":"driftGripMultiplier","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"driftSpeedThreshold","t":4,"rt":$n[0].Single,"sn":"driftSpeedThreshold","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"driftSteerThreshold","t":4,"rt":$n[0].Single,"sn":"driftSteerThreshold","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"driftTorqueMultiplier","t":4,"rt":$n[0].Single,"sn":"driftTorqueMultiplier","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"initialYaw","t":4,"rt":$n[0].Single,"sn":"initialYaw","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"isBlocked","t":4,"rt":$n[0].Boolean,"sn":"isBlocked","box":function ($v) { return Bridge.box($v, System.Boolean, System.Boolean.toString);}},{"a":1,"n":"isBraking","t":4,"rt":$n[0].Boolean,"sn":"isBraking","box":function ($v) { return Bridge.box($v, System.Boolean, System.Boolean.toString);}},{"at":[new UnityEngine.HeaderAttribute("Joystick"),new UnityEngine.SerializeFieldAttribute()],"a":1,"n":"joystick","t":4,"rt":Joystick,"sn":"joystick"},{"at":[new UnityEngine.HeaderAttribute("Drift Kick Out Settings")],"a":2,"n":"kickOutForce","t":4,"rt":$n[0].Single,"sn":"kickOutForce","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"lastRayCheckTime","t":4,"rt":$n[0].Single,"sn":"lastRayCheckTime","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.HeaderAttribute("Rotation Limits"),new UnityEngine.LunaPlaygroundFieldStepAttribute(1.0),new UnityEngine.LunaPlaygroundFieldAttribute("Player Max Steer Angle", 3, "Player Controls", false, null),new UnityEngine.RangeAttribute(0.0, 140.0)],"a":2,"n":"maxRotationAngle","t":4,"rt":$n[0].Single,"sn":"maxRotationAngle","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.LunaPlaygroundFieldAttribute("Player Max Speed", 1, "Player Controls", false, null)],"a":2,"n":"maxSpeed","t":4,"rt":$n[0].Single,"sn":"maxSpeed","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"maxStuckTime","t":4,"rt":$n[0].Single,"sn":"maxStuckTime","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"obstacleMask","t":4,"rt":$n[1].LayerMask,"sn":"obstacleMask"},{"a":2,"n":"raySpacing","t":4,"rt":$n[0].Single,"sn":"raySpacing","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.HeaderAttribute("Rotation Limits")],"a":1,"n":"rb","t":4,"rt":$n[1].Rigidbody,"sn":"rb"},{"a":1,"n":"steerAmount","t":4,"rt":$n[0].Single,"sn":"steerAmount","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.LunaPlaygroundFieldAttribute("Player Steer Strength", 2, "Player Controls", false, null)],"a":2,"n":"steerStrength","t":4,"rt":$n[0].Single,"sn":"steerStrength","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"stuckDuration","t":4,"rt":$n[0].Single,"sn":"stuckDuration","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":1,"n":"stuckRayCheckInterval","t":4,"rt":$n[0].Single,"sn":"stuckRayCheckInterval","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"at":[new UnityEngine.HeaderAttribute("Stuck Raycast Settings")],"a":2,"n":"stuckRayLength","t":4,"rt":$n[0].Single,"sn":"stuckRayLength","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}},{"a":2,"n":"unstuckMoveDistance","t":4,"rt":$n[0].Single,"sn":"unstuckMoveDistance","box":function ($v) { return Bridge.box($v, System.Single, System.Single.format, System.Single.getHashCode);}}]}; }, $n);
     /*PlayerController end.*/
 
     /*RigidbodyDriftController start.*/
